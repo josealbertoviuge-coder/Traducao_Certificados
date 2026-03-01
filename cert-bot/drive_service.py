@@ -3,5 +3,5 @@ from pydrive2.drive import GoogleDrive
 
 def conectar_drive():
     gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()  # abre login na primeira vez
+    gauth.LocalWebserverAuth()
     return GoogleDrive(gauth)
