@@ -1,1 +1,7 @@
-
+pydrive2
+pymupdf
+reportlab
+pillow
+opencv-python-headless
+pytesseract
+openai
