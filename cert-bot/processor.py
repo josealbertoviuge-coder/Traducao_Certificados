@@ -15,6 +15,7 @@ from translator import traduzir
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 import io
 from datetime import datetime
+import os
 
 
 # =========================
@@ -29,7 +30,6 @@ def listar_arquivos(drive):
     ).execute()
 
     print("RETORNO DRIVE:", results)
-
     return results.get("files", [])
 
 
@@ -123,25 +123,20 @@ def processar(drive):
 
             nome_saida = "EN_" + arquivo['name']
 
-            # tentar preservar layout
-            try:
-               blocos = extrair_blocos(caminho)
+            # ===== tentativa de preservar layout =====
+            blocos = extrair_blocos(caminho)
 
-               if blocos:
-                   print("✔ Layout preservado")
-                   gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
-               else:
-                   print("PDF escaneado → usando modo texto")
-                   gerar_pdf(texto_traduzido, nome_saida)
+            if blocos:
+                print("✔ Layout preservado")
+                gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
 
-                import os
+                # fallback se layout gerar PDF vazio
                 if os.path.getsize(nome_saida) < 2000:
                     print("Layout vazio — usando modo simples")
                     gerar_pdf(texto_traduzido, nome_saida)
-                print("✔ Layout preservado")
-            except Exception:
+            else:
+                print("PDF escaneado → usando modo texto")
                 gerar_pdf(texto_traduzido, nome_saida)
-                print("✔ PDF gerado em modo simples")
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
