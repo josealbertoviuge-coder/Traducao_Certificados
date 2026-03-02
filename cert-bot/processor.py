@@ -1,9 +1,19 @@
 from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
-from pdf_utils import extrair_texto, gerar_pdf
+
+from pdf_utils import (
+    extrair_texto,
+    gerar_pdf,
+    extrair_blocos,
+    gerar_pdf_layout,
+    precisa_ocr,
+    limpar_assinatura
+)
+
 from translator import traduzir
 
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 import io
+from datetime import datetime
 
 
 # =========================
@@ -67,6 +77,14 @@ def mover_para_processados(drive, file_id):
 
 
 # =========================
+# REGISTRO DE LOG
+# =========================
+def registrar_log(nome):
+    with open("log.txt", "a") as log:
+        log.write(f"{nome} processado em {datetime.now()}\n")
+
+
+# =========================
 # PROCESSAMENTO PRINCIPAL
 # =========================
 def processar(drive):
@@ -80,23 +98,44 @@ def processar(drive):
     for arquivo in arquivos:
         print("Processando:", arquivo['name'])
 
-        # baixar
-        caminho = baixar_arquivo(drive, arquivo['id'], arquivo['name'])
+        try:
+            # baixar arquivo
+            caminho = baixar_arquivo(drive, arquivo['id'], arquivo['name'])
 
-        # extrair texto
-        texto = extrair_texto(caminho)
+            # limpar assinaturas e carimbos
+            limpar_assinatura(caminho, caminho)
 
-        # traduzir
-        texto_traduzido = traduzir(texto)
+            # extrair texto
+            texto = extrair_texto(caminho)
 
-        # gerar PDF traduzido
-        nome_saida = "EN_" + arquivo['name']
-        gerar_pdf(texto_traduzido, nome_saida)
+            # detectar PDF escaneado
+            if precisa_ocr(texto):
+                print("⚠ PDF parece escaneado (OCR pode ser necessário)")
 
-        # enviar arquivo traduzido
-        enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
+            # traduzir conteúdo
+            texto_traduzido = traduzir(texto)
 
-        # mover original para processados
-        mover_para_processados(drive, arquivo['id'])
+            nome_saida = "EN_" + arquivo['name']
 
-        print("✔ Concluído:", arquivo['name'])
+            # tentar preservar layout
+            try:
+                blocos = extrair_blocos(caminho)
+                gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+                print("✔ Layout preservado")
+            except Exception:
+                gerar_pdf(texto_traduzido, nome_saida)
+                print("✔ PDF gerado em modo simples")
+
+            # enviar traduzido
+            enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
+
+            # mover original
+            mover_para_processados(drive, arquivo['id'])
+
+            # registrar log
+            registrar_log(arquivo['name'])
+
+            print("✔ Concluído:", arquivo['name'])
+
+        except Exception as e:
+            print(f"Erro ao processar {arquivo['name']}: {e}")
