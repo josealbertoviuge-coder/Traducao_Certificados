@@ -52,12 +52,13 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
     if pdf_saida is None:
         pdf_saida = pdf_entrada
 
+    temp_saida = pdf_entrada + "_clean.pdf"
+
     doc = fitz.open(pdf_entrada)
 
     for page in doc:
         altura = page.rect.height
 
-        # remove faixa inferior (ajustável)
         area_assinatura = fitz.Rect(
             0,
             altura - 120,
@@ -68,7 +69,12 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
         page.add_redact_annot(area_assinatura)
         page.apply_redactions()
 
-    doc.save(pdf_saida)
+    doc.save(temp_saida)
+    doc.close()
+
+    # substitui o original
+    import os
+    os.replace(temp_saida, pdf_saida)
 
 
 # =========================================================
