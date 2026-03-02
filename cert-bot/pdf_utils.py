@@ -185,17 +185,16 @@ def gerar_pdf_bilingue(pdf_original, texto_traduzido, nome_saida):
 
     for pagina in paginas:
 
-        # converter imagem para buffer
         buffer = io.BytesIO()
         pagina.save(buffer, format="PNG")
         buffer.seek(0)
 
         img = ImageReader(buffer)
 
-        # metade esquerda → imagem original
-        c.drawImage(img, 0, 0, largura=largura/2, height=altura)
+        # lado esquerdo → original
+        c.drawImage(img, 0, 0, width=largura/2, height=altura)
 
-        # metade direita → tradução
+        # lado direito → tradução
         y = altura - 40
 
         while y > 40 and linha_index < len(linhas):
