@@ -22,8 +22,12 @@ from datetime import datetime
 def listar_arquivos(drive):
     results = drive.files().list(
         q=f"'{ID_ENTRADA}' in parents and trashed=false",
-        fields="files(id, name)"
+        fields="files(id, name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True
     ).execute()
+
+    print("RETORNO DRIVE:", results)
 
     return results.get("files", [])
 
