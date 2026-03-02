@@ -12,10 +12,10 @@ def baixar_arquivo(file):
     file.GetContentFile(file['title'])
     return file['title']
 
-def enviar_traduzido(drive, pasta_id, arquivo):
-    f = drive.CreateFile({'parents': [{'id': pasta_id}]})
-    f.SetContentFile(arquivo)
-    f.Upload()
+def enviar_traduzido(drive, pasta_id, caminho_arquivo):
+    file = drive.CreateFile({'parents': [{'id': pasta_id}]})
+    file.SetContentFile(caminho_arquivo)
+    file.Upload()
 
 def mover_para_processados(file):
     file['parents'] = [{'id': ID_PROCESSADOS}]
@@ -33,9 +33,9 @@ def processar(drive):
 
         texto_traduzido = traduzir(texto)
 
-        nome_saida = "EN_" + arquivo['title']
-        gerar_pdf(texto_traduzido, nome_saida)
+nome_saida = "EN_" + arquivo['title']
+gerar_pdf(texto_traduzido, nome_saida)
 
-        enviar_traduzido(drive, nome_saida)
+enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
 
         mover_para_processados(arquivo)
