@@ -26,3 +26,12 @@ def extrair_blocos(pdf):
             blocos.extend(words)
 
     return blocos
+
+def gerar_pdf_layout(blocos, texto_traduzido, nome):
+
+    c = canvas.Canvas(nome)
+
+    for bloco, linha in zip(blocos, texto_traduzido.split("\n")):
+        c.drawString(bloco["x0"], 800 - bloco["top"], linha)
+
+    c.save()
