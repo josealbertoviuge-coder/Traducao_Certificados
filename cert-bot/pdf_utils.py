@@ -237,3 +237,56 @@ def gerar_pdf_tabelado(texto, nome_saida):
             elementos.append(Paragraph(bloco, styles['Normal']))
 
     doc.build(elementos)
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+from pdf2image import convert_from_path
+import pytesseract
+from pytesseract import Output
+import io
+
+
+def gerar_pdf_sobreposto(pdf_original, nome_saida, traduzir_func):
+
+    paginas = convert_from_path(pdf_original)
+
+    largura, altura = A4
+    c = canvas.Canvas(nome_saida, pagesize=A4)
+
+    for pagina in paginas:
+
+        buffer = io.BytesIO()
+        pagina.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        img = ImageReader(buffer)
+
+        # desenhar página original
+        c.drawImage(img, 0, 0, width=largura, height=altura)
+
+        # OCR com posições
+        dados = pytesseract.image_to_data(pagina, output_type=Output.DICT)
+
+        for i, texto in enumerate(dados["text"]):
+            if texto.strip():
+
+                x = dados["left"][i]
+                y = dados["top"][i]
+                w = dados["width"][i]
+                h = dados["height"][i]
+
+                traducao = traduzir_func(texto)
+
+                # cobrir texto original
+                c.setFillColorRGB(1, 1, 1)
+                c.rect(x, altura - y, w, h, fill=1, stroke=0)
+
+                # escrever tradução
+                c.setFillColorRGB(0, 0, 0)
+                c.setFont("Helvetica", max(6, h))
+                c.drawString(x, altura - y, traducao)
+
+        c.showPage()
+
+    c.save()
