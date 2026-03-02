@@ -1,6 +1,6 @@
 import os
 import json
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
@@ -15,22 +15,22 @@ def conectar_drive():
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_config(
-                json.loads(os.environ["GOOGLE_CREDENTIALS"]),
-                SCOPES
-            )
 
-            auth_url, _ = flow.authorization_url(prompt='consent')
+        flow = Flow.from_client_config(
+            json.loads(os.environ["GOOGLE_CREDENTIALS"]),
+            scopes=SCOPES,
+            redirect_uri="http://localhost"
+        )
 
-            print("\n👉 Abra este link no navegador:")
-            print(auth_url)
-            code = input("\n👉 Cole o código aqui: ")
+        auth_url, _ = flow.authorization_url(prompt='consent')
 
-            flow.fetch_token(code=code)
-            creds = flow.credentials
+        print("\n👉 Abra este link:")
+        print(auth_url)
+
+        code = input("\n👉 Cole o código retornado: ")
+
+        flow.fetch_token(code=code)
+        creds = flow.credentials
 
         with open("token.json", "w") as token:
             token.write(creds.to_json())
