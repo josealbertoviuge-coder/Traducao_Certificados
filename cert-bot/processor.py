@@ -2,21 +2,15 @@ from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 
 from pdf_utils import (
     extrair_texto,
-    gerar_pdf,
-    extrair_blocos,
-    gerar_pdf_layout,
     precisa_ocr,
     limpar_assinatura,
     ocr_pdf,
-    gerar_pdf_sobreposto
+    gerar_pdf_traducao_por_pagina
 )
-
-from translator import traduzir
 
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 import io
 from datetime import datetime
-import os
 
 
 # =========================
@@ -111,42 +105,21 @@ def processar(drive):
             # limpar assinaturas/carimbos
             limpar_assinatura(caminho, caminho)
 
-            # extrair texto
+            # verificar se é PDF escaneado
             texto = extrair_texto(caminho)
 
-            # verificar se é escaneado
             if precisa_ocr(texto):
-                print("⚠ PDF escaneado detectado")
+                print("⚠ PDF escaneado detectado — usando OCR")
+                ocr_pdf(caminho)  # apenas valida leitura (opcional)
 
-                # OCR para obter texto completo
-                texto = ocr_pdf(caminho)
+            # gerar tradução por página (original + tradução)
+            print("✔ Gerando tradução por página (padrão profissional)")
+            nome_saida = "EN_" + arquivo['name']
 
-                print("✔ Gerando tradução sobreposta ao layout original")
-                nome_saida = "EN_" + arquivo['name']
-
-                gerar_pdf_sobreposto(
-                    caminho,
-                    nome_saida,
-                    traduzir
-                )
-
-            else:
-                print("✔ PDF digital detectado — preservando layout")
-
-                texto_traduzido = traduzir(texto)
-                nome_saida = "EN_" + arquivo['name']
-
-                blocos = extrair_blocos(caminho)
-
-                if blocos:
-                    gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
-
-                    # fallback se layout gerar arquivo vazio
-                    if os.path.getsize(nome_saida) < 2000:
-                        print("Layout vazio → usando modo texto")
-                        gerar_pdf(texto_traduzido, nome_saida)
-                else:
-                    gerar_pdf(texto_traduzido, nome_saida)
+            gerar_pdf_traducao_por_pagina(
+                caminho,
+                nome_saida
+            )
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
