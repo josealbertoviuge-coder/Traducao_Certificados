@@ -99,14 +99,15 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
     estilo_titulo = ParagraphStyle(
         'titulo',
         parent=styles['Heading2'],
-        spaceAfter=10
+        fontSize=10,
+        spaceAfter=6
     )
 
     estilo_texto = ParagraphStyle(
         'texto',
         parent=styles['Normal'],
-        fontSize=9,
-        leading=12
+        fontSize=8,
+        leading=10
     )
 
     story = []
@@ -194,30 +195,15 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
 # =========================================================
 def _criar_tabela(dados):
 
-    # Detectar se é formato horizontal (Element | C | Mn | ...)
-    if len(dados) == 2 and len(dados[0]) > 2:
-        cabecalho = dados[0]
-        valores = dados[1]
-
-        nova_tabela = [["Element", "Value"]]
-
-        for i in range(1, len(cabecalho)):
-            nova_tabela.append([
-                cabecalho[i].strip(),
-                valores[i].strip()
-            ])
-
-        dados = nova_tabela
-
-    tabela = Table(dados, colWidths=[6*cm, 6*cm])
+    tabela = Table(dados, colWidths=[6.5*cm, 6.5*cm])
 
     tabela.setStyle(TableStyle([
-        ('LINEBELOW', (0,0), (-1,0), 1, colors.black),
+        ('LINEBELOW', (0,0), (-1,0), 0.8, colors.black),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('TOPPADDING', (0,0), (-1,-1), 4),
-        ('LEFTPADDING', (0,0), (-1,-1), 6),
+        ('FONTSIZE', (0,0), (-1,-1), 8),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 3),
     ]))
 
     return tabela
