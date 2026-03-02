@@ -137,7 +137,10 @@ def processar(drive):
                     gerar_pdf(texto_traduzido, nome_saida)
             else:
                 print("PDF escaneado → gerando versão bilíngue")
-                gerar_pdf_bilingue(caminho, texto_traduzido, nome_saida)
+                from pdf_utils import gerar_pdf_tabelado
+
+                print("Gerando PDF com tabelas estruturadas")
+                gerar_pdf_tabelado(texto_traduzido, nome_saida)
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
