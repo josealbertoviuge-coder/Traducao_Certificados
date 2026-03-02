@@ -127,7 +127,11 @@ def processar(drive):
             try:
                 blocos = extrair_blocos(caminho)
                 gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
-                #gerar_pdf(texto_traduzido, nome_saida)
+
+                import os
+                if os.path.getsize(nome_saida) < 2000:
+                    print("Layout vazio — usando modo simples")
+                    gerar_pdf(texto_traduzido, nome_saida)
                 print("✔ Layout preservado")
             except Exception:
                 gerar_pdf(texto_traduzido, nome_saida)
