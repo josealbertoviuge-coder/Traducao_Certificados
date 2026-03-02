@@ -113,3 +113,28 @@ def gerar_pdf_layout(blocos, texto_traduzido, nome):
         c.drawString(x, y, linha)
 
     c.save()
+
+from openai import OpenAI
+import base64
+
+client = OpenAI()
+
+def ocr_pdf(pdf_path):
+    with open(pdf_path, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=[{
+            "role": "user",
+            "content": [
+                {"type": "input_text", "text": "Extract all text from this document."},
+                {
+                    "type": "input_image",
+                    "image_base64": base64_pdf
+                }
+            ]
+        }]
+    )
+
+    return response.output[0].content[0].text
