@@ -58,35 +58,27 @@ def traduzir(texto):
 
     for parte in partes:
 
-        prompt = f"""
-Extract structured data from this material certificate.
+       prompt = f"""
+Translate the following material certificate to English.
 
-Return JSON only.
+IMPORTANT RULES:
 
-If present, extract:
-
-- chemical composition
-- mechanical properties
-- heat treatment
-- material specification
-- standards
-
-FORMAT:
-
-{{
-  "chemical_composition": [
-    {{"element": "", "value": ""}}
-  ],
-  "mechanical_properties": [
-    {{"property": "", "value": ""}}
-  ],
-  "notes": ""
-}}
+- Preserve ALL content.
+- Do NOT summarize.
+- Do NOT omit any information.
+- Do NOT reorganize structure.
+- Maintain original section order.
+- Maintain table structure exactly as in the source.
+- Keep standards (ASTM, DIN, ISO, EN) unchanged.
+- Keep units exactly (MPa, mm, %, °C).
+- Keep chemical symbols unchanged (C, Mn, Si, Cr, Ni, etc.).
+- Do NOT use markdown.
+- Do NOT use JSON.
+- Return clean professional technical text only.
 
 TEXT:
 {parte}
 """
-
         resposta = client.responses.create(
             model="gpt-4.1-mini",
             input=prompt
