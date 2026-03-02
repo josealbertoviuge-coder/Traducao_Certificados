@@ -1,5 +1,3 @@
-from pdf_utils import gerar_pdf_bilingue
-from pdf_utils import ocr_pdf
 from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 
 from pdf_utils import (
@@ -8,7 +6,9 @@ from pdf_utils import (
     extrair_blocos,
     gerar_pdf_layout,
     precisa_ocr,
-    limpar_assinatura
+    limpar_assinatura,
+    ocr_pdf,
+    gerar_pdf_sobreposto
 )
 
 from translator import traduzir
@@ -108,39 +108,45 @@ def processar(drive):
             # baixar arquivo
             caminho = baixar_arquivo(drive, arquivo['id'], arquivo['name'])
 
-            # limpar assinaturas e carimbos
+            # limpar assinaturas/carimbos
             limpar_assinatura(caminho, caminho)
 
             # extrair texto
             texto = extrair_texto(caminho)
 
-            # detectar PDF escaneado
+            # verificar se é escaneado
             if precisa_ocr(texto):
-                print("⚠ PDF escaneado detectado — usando OCR")
+                print("⚠ PDF escaneado detectado")
+
+                # OCR para obter texto completo
                 texto = ocr_pdf(caminho)
 
-            # traduzir conteúdo
-            texto_traduzido = traduzir(texto)
+                print("✔ Gerando tradução sobreposta ao layout original")
+                nome_saida = "EN_" + arquivo['name']
 
-            nome_saida = "EN_" + arquivo['name']
+                gerar_pdf_sobreposto(
+                    caminho,
+                    nome_saida,
+                    traduzir
+                )
 
-            # ===== tentativa de preservar layout =====
-            blocos = extrair_blocos(caminho)
-
-            if blocos:
-                print("✔ Layout preservado")
-                gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
-
-                # fallback se layout gerar PDF vazio
-                if os.path.getsize(nome_saida) < 2000:
-                    print("Layout vazio — usando modo simples")
-                    gerar_pdf(texto_traduzido, nome_saida)
             else:
-                print("PDF escaneado → gerando versão bilíngue")
-                from pdf_utils import gerar_pdf_tabelado
+                print("✔ PDF digital detectado — preservando layout")
 
-                print("Gerando PDF com tabelas estruturadas")
-                gerar_pdf_tabelado(texto_traduzido, nome_saida)
+                texto_traduzido = traduzir(texto)
+                nome_saida = "EN_" + arquivo['name']
+
+                blocos = extrair_blocos(caminho)
+
+                if blocos:
+                    gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+
+                    # fallback se layout gerar arquivo vazio
+                    if os.path.getsize(nome_saida) < 2000:
+                        print("Layout vazio → usando modo texto")
+                        gerar_pdf(texto_traduzido, nome_saida)
+                else:
+                    gerar_pdf(texto_traduzido, nome_saida)
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
