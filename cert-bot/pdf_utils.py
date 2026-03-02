@@ -52,6 +52,8 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
     if pdf_saida is None:
         pdf_saida = pdf_entrada
 
+    import fitz
+
     temp_saida = pdf_entrada + "_clean.pdf"
 
     doc = fitz.open(pdf_entrada)
@@ -59,23 +61,22 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
     for page in doc:
         altura = page.rect.height
 
-        area_assinatura = fitz.Rect(
+        # área inferior (assinaturas/carimbos)
+        area = fitz.Rect(
             0,
             altura - 120,
             page.rect.width,
             altura
         )
 
-        page.add_redact_annot(area_assinatura)
-        page.apply_redactions()
+        # desenha retângulo branco (sem apagar conteúdo interno)
+        page.draw_rect(area, color=(1, 1, 1), fill=(1, 1, 1))
 
     doc.save(temp_saida)
     doc.close()
 
-    # substitui o original
     import os
     os.replace(temp_saida, pdf_saida)
-
 
 # =========================================================
 # GERAR PDF SIMPLES (TEXTO CORRIDO)
