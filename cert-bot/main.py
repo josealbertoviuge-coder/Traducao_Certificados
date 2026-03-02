@@ -1,9 +1,13 @@
 from drive_service import conectar_drive
 from processor import processar
+import time
 
-def main():
+def executar():
+    print("Verificando novos certificados...")
     drive = conectar_drive()
     processar(drive)
+    print("Aguardando próxima verificação...\n")
 
-if __name__ == "__main__":
-    main()
+while True:
+    executar()
+    time.sleep(30)  # 30 s
