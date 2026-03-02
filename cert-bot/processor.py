@@ -126,7 +126,8 @@ def processar(drive):
             # tentar preservar layout
             try:
                 blocos = extrair_blocos(caminho)
-                gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+                #gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+                gerar_pdf(texto_traduzido, nome_saida)
                 print("✔ Layout preservado")
             except Exception:
                 gerar_pdf(texto_traduzido, nome_saida)
