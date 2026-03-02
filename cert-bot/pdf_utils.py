@@ -194,19 +194,25 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
 # =========================================================
 def _criar_tabela(dados):
 
-    # limpa dados removendo símbolos excessivos
-    dados_limpos = []
-    for linha in dados:
-        dados_limpos.append([
-            linha[0].replace(":", "").strip(),
-            linha[1].replace(":", "").strip()
-        ])
+    # Detectar se é formato horizontal (Element | C | Mn | ...)
+    if len(dados) == 2 and len(dados[0]) > 2:
+        cabecalho = dados[0]
+        valores = dados[1]
 
-    tabela = Table(dados_limpos, colWidths=[7*cm, 7*cm])
+        nova_tabela = [["Element", "Value"]]
+
+        for i in range(1, len(cabecalho)):
+            nova_tabela.append([
+                cabecalho[i].strip(),
+                valores[i].strip()
+            ])
+
+        dados = nova_tabela
+
+    tabela = Table(dados, colWidths=[6*cm, 6*cm])
 
     tabela.setStyle(TableStyle([
-        ('LINEBELOW', (0,0), (-1,0), 1, colors.black),  # linha sob cabeçalho
-        ('LINEBELOW', (0,-1), (-1,-1), 0.5, colors.grey),
+        ('LINEBELOW', (0,0), (-1,0), 1, colors.black),
         ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
         ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
         ('BOTTOMPADDING', (0,0), (-1,-1), 6),
