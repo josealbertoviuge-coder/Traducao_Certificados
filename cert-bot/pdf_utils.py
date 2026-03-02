@@ -169,7 +169,7 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
                 continue
 
             # detectar colunas chave: valor
-            if ":" in linha:
+            if ":" in linha and len(linha) < 60:
                 chave, valor = linha.split(":", 1)
                 tabela_temp.append([chave.strip(), valor.strip()])
             else:
@@ -194,15 +194,24 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
 # =========================================================
 def _criar_tabela(dados):
 
-    tabela = Table(dados, colWidths=[6*cm, 8*cm])
+    # limpa dados removendo símbolos excessivos
+    dados_limpos = []
+    for linha in dados:
+        dados_limpos.append([
+            linha[0].replace(":", "").strip(),
+            linha[1].replace(":", "").strip()
+        ])
+
+    tabela = Table(dados_limpos, colWidths=[7*cm, 7*cm])
 
     tabela.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('LINEBELOW', (0,0), (-1,0), 1, colors.black),  # linha sob cabeçalho
+        ('LINEBELOW', (0,-1), (-1,-1), 0.5, colors.grey),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTNAME', (0,1), (-1,-1), 'Helvetica'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
+        ('LEFTPADDING', (0,0), (-1,-1), 6),
     ]))
 
     return tabela
