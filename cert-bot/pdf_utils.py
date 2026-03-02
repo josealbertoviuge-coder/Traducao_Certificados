@@ -205,3 +205,35 @@ def gerar_pdf_bilingue(pdf_original, texto_traduzido, nome_saida):
         c.showPage()
 
     c.save()
+
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+
+
+def gerar_pdf_tabelado(texto, nome_saida):
+
+    doc = SimpleDocTemplate(nome_saida)
+    styles = getSampleStyleSheet()
+    elementos = []
+
+    for bloco in texto.split("\n\n"):
+
+        linhas = [l.strip() for l in bloco.split("\n") if l.strip()]
+
+        # detectar tabela (linhas com |)
+        if all("|" in l for l in linhas) and len(linhas) > 1:
+            dados = [linha.split("|") for linha in linhas]
+
+            tabela = Table(dados)
+            tabela.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+                ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ]))
+
+            elementos.append(tabela)
+        else:
+            elementos.append(Paragraph(bloco, styles['Normal']))
+
+    doc.build(elementos)
