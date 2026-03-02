@@ -1,10 +1,18 @@
 import fitz
-import pdfplumber
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-from openai import OpenAI
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,
+    PageBreak
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.lib import colors
 from pdf2image import convert_from_path
+from openai import OpenAI
 import base64
 import io
 import os
@@ -30,7 +38,7 @@ def precisa_ocr(texto):
 
 
 # =========================================================
-# LIMPAR ASSINATURA
+# LIMPAR ASSINATURAS / CARIMBOS
 # =========================================================
 def limpar_assinatura(pdf_entrada, pdf_saida=None):
     if pdf_saida is None:
@@ -42,7 +50,7 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
     for page in doc:
         h = page.rect.height
         area = fitz.Rect(0, h-120, page.rect.width, h)
-        page.draw_rect(area, fill=(1,1,1))
+        page.draw_rect(area, fill=(1, 1, 1))
 
     doc.save(temp)
     doc.close()
@@ -50,51 +58,16 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
 
 
 # =========================================================
-# EXTRAIR BLOCOS (PDF DIGITAL)
-# =========================================================
-def extrair_blocos(pdf):
-    blocos = []
-    with pdfplumber.open(pdf) as pdf_file:
-        for page in pdf_file.pages:
-            words = page.extract_words()
-            for w in words:
-                blocos.append({
-                    "text": w["text"],
-                    "x": w["x0"],
-                    "y": w["top"]
-                })
-    return blocos
-
-
-# =========================================================
-# GERAR PDF COM LAYOUT PRESERVADO
-# =========================================================
-def gerar_pdf_layout(blocos, texto_traduzido, nome):
-    largura, altura = A4
-    c = canvas.Canvas(nome, pagesize=A4)
-
-    linhas = texto_traduzido.split("\n")
-
-    for bloco, linha in zip(blocos, linhas):
-        x = bloco["x"]
-        y = altura - bloco["y"]
-        if 20 < y < altura-20:
-            c.drawString(x, y, linha)
-
-    c.save()
-
-
-# =========================================================
-# OCR VIA OPENAI (PDF ESCANEADO)
+# OCR VIA OPENAI (para PDFs escaneados)
 # =========================================================
 def ocr_pdf(pdf_path):
     imagens = convert_from_path(pdf_path)
     texto = ""
 
     for img in imagens:
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        encoded = base64.b64encode(buf.getvalue()).decode()
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        encoded = base64.b64encode(buffer.getvalue()).decode()
 
         response = client.responses.create(
             model="gpt-4.1-mini",
@@ -102,7 +75,8 @@ def ocr_pdf(pdf_path):
                 "role": "user",
                 "content": [
                     {"type": "input_text", "text": "Extract all text from this document."},
-                    {"type": "input_image", "image_url": f"data:image/png;base64,{encoded}"}
+                    {"type": "input_image",
+                     "image_url": f"data:image/png;base64,{encoded}"}
                 ]
             }]
         )
@@ -113,79 +87,29 @@ def ocr_pdf(pdf_path):
 
 
 # =========================================================
-# SOBREPOR TRADUÇÃO NO LAYOUT ORIGINAL
+# GERAR PDF CORPORATIVO
+# ORIGINAL + TRADUÇÃO ORGANIZADA POR PÁGINA
 # =========================================================
-def gerar_pdf_sobreposto(pdf_original, nome_saida, traduzir_func):
-
-    paginas = convert_from_path(pdf_original)
-
-    largura, altura = A4
-    c = canvas.Canvas(nome_saida, pagesize=A4)
-
-    for pagina in paginas:
-
-        buffer = io.BytesIO()
-        pagina.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        img = ImageReader(buffer)
-        c.drawImage(img, 0, 0, width=largura, height=altura)
-
-        # OCR da página inteira
-        buf = io.BytesIO()
-        pagina.save(buf, format="PNG")
-        encoded = base64.b64encode(buf.getvalue()).decode()
-
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": "Translate the text in this page to English."},
-                    {"type": "input_image", "image_url": f"data:image/png;base64,{encoded}"}
-                ]
-            }]
-        )
-
-        traducao = response.output_text
-
-        textobject = c.beginText(40, altura-40)
-        textobject.setFont("Helvetica", 8)
-
-        for line in traducao.split("\n"):
-            textobject.textLine(line)
-
-        c.drawText(textobject)
-        c.showPage()
-
-    c.save()
-
-# =========================================================
-# GERAR PDF SIMPLES (FALLBACK)
-# =========================================================
-def gerar_pdf(texto, nome):
-
-    largura, altura = A4
-    c = canvas.Canvas(nome, pagesize=A4)
-
-    y = altura - 40
-
-    for linha in texto.split("\n"):
-        c.drawString(40, y, linha)
-        y -= 14
-
-        if y < 40:
-            c.showPage()
-            y = altura - 40
-
-    c.save()
-
 def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
 
     paginas = convert_from_path(pdf_original)
 
-    largura, altura = A4
-    c = canvas.Canvas(nome_saida, pagesize=A4)
+    styles = getSampleStyleSheet()
+
+    estilo_titulo = ParagraphStyle(
+        'titulo',
+        parent=styles['Heading2'],
+        spaceAfter=10
+    )
+
+    estilo_texto = ParagraphStyle(
+        'texto',
+        parent=styles['Normal'],
+        fontSize=9,
+        leading=12
+    )
+
+    story = []
 
     for i, pagina in enumerate(paginas, start=1):
 
@@ -196,15 +120,12 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
         pagina.save(buffer, format="PNG")
         buffer.seek(0)
 
-        img = ImageReader(buffer)
-        c.drawImage(img, 0, 0, width=largura, height=altura)
-        c.showPage()
+        story.append(Image(buffer, width=16*cm, height=24*cm))
+        story.append(PageBreak())
 
         # =========================
-        # OCR + tradução da página
+        # OCR + Tradução estruturada
         # =========================
-        buffer = io.BytesIO()
-        pagina.save(buffer, format="PNG")
         encoded = base64.b64encode(buffer.getvalue()).decode()
 
         response = client.responses.create(
@@ -212,29 +133,76 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
             input=[{
                 "role": "user",
                 "content": [
-                    {"type": "input_text",
-                     "text": "Translate this material certificate page to English and organize it clearly."},
-                    {"type": "input_image",
-                     "image_url": f"data:image/png;base64,{encoded}"}
+                    {
+                        "type": "input_text",
+                        "text": "Translate and organize this material certificate page into clear sections and aligned tables."
+                    },
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:image/png;base64,{encoded}"
+                    }
                 ]
             }]
         )
 
         traducao = response.output_text
 
-        # =========================
-        # Página de tradução
-        # =========================
-        textobject = c.beginText(40, altura - 40)
-        textobject.setFont("Helvetica", 10)
+        story.append(Paragraph(f"ENGLISH TRANSLATION — PAGE {i}", styles['Heading1']))
+        story.append(Spacer(1, 12))
 
-        c.drawString(40, altura - 25, f"ENGLISH TRANSLATION — PAGE {i}")
-        c.line(40, altura - 30, largura - 40, altura - 30)
+        linhas = traducao.split("\n")
+        tabela_temp = []
 
-        for linha in traducao.split("\n"):
-            textobject.textLine(linha)
+        for linha in linhas:
+            linha = linha.strip()
+            if not linha:
+                continue
 
-        c.drawText(textobject)
-        c.showPage()
+            # detectar títulos técnicos
+            if linha.isupper() or linha.endswith(":"):
+                if tabela_temp:
+                    story.append(_criar_tabela(tabela_temp))
+                    tabela_temp = []
+                    story.append(Spacer(1, 12))
 
-    c.save()
+                story.append(Paragraph(linha, estilo_titulo))
+                continue
+
+            # detectar colunas chave: valor
+            if ":" in linha:
+                chave, valor = linha.split(":", 1)
+                tabela_temp.append([chave.strip(), valor.strip()])
+            else:
+                if tabela_temp:
+                    story.append(_criar_tabela(tabela_temp))
+                    tabela_temp = []
+                    story.append(Spacer(1, 12))
+
+                story.append(Paragraph(linha, estilo_texto))
+
+        if tabela_temp:
+            story.append(_criar_tabela(tabela_temp))
+
+        story.append(PageBreak())
+
+    doc = SimpleDocTemplate(nome_saida)
+    doc.build(story)
+
+
+# =========================================================
+# FUNÇÃO AUXILIAR PARA TABELAS ALINHADAS
+# =========================================================
+def _criar_tabela(dados):
+
+    tabela = Table(dados, colWidths=[6*cm, 8*cm])
+
+    tabela.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    return tabela
