@@ -1,3 +1,4 @@
+from pdf_utils import gerar_pdf_bilingue
 from pdf_utils import ocr_pdf
 from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 
@@ -135,8 +136,8 @@ def processar(drive):
                     print("Layout vazio — usando modo simples")
                     gerar_pdf(texto_traduzido, nome_saida)
             else:
-                print("PDF escaneado → usando modo texto")
-                gerar_pdf(texto_traduzido, nome_saida)
+                print("PDF escaneado → gerando versão bilíngue")
+                gerar_pdf_bilingue(caminho, texto_traduzido, nome_saida)
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
