@@ -27,7 +27,6 @@ def aplicar_glossario(texto):
 
 # =====================================================
 # DIVIDIR TEXTOS MUITO GRANDES
-# (evita limite de tokens)
 # =====================================================
 def dividir_texto(texto, tamanho=3500):
     partes = []
@@ -55,12 +54,11 @@ def traduzir(texto):
         return ""
 
     partes = dividir_texto(texto)
-
     traducao_final = ""
 
     for parte in partes:
 
-prompt = f"""
+        prompt = f"""
 Translate the following material certificate to English.
 
 IMPORTANT:
@@ -96,7 +94,7 @@ TEXT:
             input=prompt
         )
 
-        traducao = resposta.output[0].content[0].text
+        traducao = resposta.output_text
 
         traducao_final += traducao + "\n"
 
