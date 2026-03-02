@@ -8,3 +8,4 @@ pdfplumber
 opencv-python-headless
 Pillow
 pdf2image
+pytesseract
