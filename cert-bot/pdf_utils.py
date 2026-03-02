@@ -166,3 +166,43 @@ def ocr_pdf(pdf_path):
         texto_final += response.output_text + "\n"
 
     return texto_final
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+from pdf2image import convert_from_path
+import io
+
+def gerar_pdf_bilingue(pdf_original, texto_traduzido, nome_saida):
+
+    paginas = convert_from_path(pdf_original)
+
+    largura, altura = A4
+    c = canvas.Canvas(nome_saida, pagesize=A4)
+
+    linhas = texto_traduzido.split("\n")
+    linha_index = 0
+
+    for pagina in paginas:
+
+        # converter imagem para buffer
+        buffer = io.BytesIO()
+        pagina.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        img = ImageReader(buffer)
+
+        # metade esquerda → imagem original
+        c.drawImage(img, 0, 0, largura=largura/2, height=altura)
+
+        # metade direita → tradução
+        y = altura - 40
+
+        while y > 40 and linha_index < len(linhas):
+            c.drawString(largura/2 + 20, y, linhas[linha_index])
+            y -= 14
+            linha_index += 1
+
+        c.showPage()
+
+    c.save()
