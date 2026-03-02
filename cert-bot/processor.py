@@ -125,8 +125,14 @@ def processar(drive):
 
             # tentar preservar layout
             try:
-                blocos = extrair_blocos(caminho)
-                gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+               blocos = extrair_blocos(caminho)
+
+               if blocos:
+                   print("✔ Layout preservado")
+                   gerar_pdf_layout(blocos, texto_traduzido, nome_saida)
+               else:
+                   print("PDF escaneado → usando modo texto")
+                   gerar_pdf(texto_traduzido, nome_saida)
 
                 import os
                 if os.path.getsize(nome_saida) < 2000:
