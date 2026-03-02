@@ -1,23 +1,18 @@
 import os
-import json
-from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def conectar_drive():
 
-    if "GOOGLE_AUTH_CODE" not in os.environ:
-        raise Exception("Variável GOOGLE_AUTH_CODE não definida")
-
-    flow = Flow.from_client_config(
-        json.loads(os.environ["GOOGLE_CREDENTIALS"]),
-        scopes=SCOPES,
-        redirect_uri="http://localhost"
+    creds = Credentials(
+        None,
+        refresh_token=os.environ["GOOGLE_REFRESH_TOKEN"],
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.environ["GOOGLE_CLIENT_ID"],
+        client_secret=os.environ["GOOGLE_CLIENT_SECRET"],
+        scopes=SCOPES
     )
-
-    flow.fetch_token(code=os.environ["GOOGLE_AUTH_CODE"])
-
-    creds = flow.credentials
 
     return build('drive', 'v3', credentials=creds)
