@@ -59,31 +59,29 @@ def traduzir(texto):
     for parte in partes:
 
         prompt = f"""
-Translate the following material certificate to English.
+Extract structured data from this material certificate.
 
-IMPORTANT:
+Return JSON only.
 
-If the document contains tables such as:
+If present, extract:
+
 - chemical composition
 - mechanical properties
-- test results
+- heat treatment
+- material specification
+- standards
 
-Return them in structured table format like:
+FORMAT:
 
-Element | %
-C | 0.20
-Mn | 1.50
-
-Yield Strength | 355 MPa
-Tensile Strength | 510 MPa
-
-RULES:
-- preserve technical terminology
-- keep standards (ASTM, DIN, ISO)
-- keep units exactly
-- keep chemical symbols unchanged
-- do not translate steel grades
-- maintain numeric precision
+{{
+  "chemical_composition": [
+    {{"element": "", "value": ""}}
+  ],
+  "mechanical_properties": [
+    {{"property": "", "value": ""}}
+  ],
+  "notes": ""
+}}
 
 TEXT:
 {parte}
