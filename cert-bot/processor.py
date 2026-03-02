@@ -1,3 +1,4 @@
+from pdf_utils import ocr_pdf
 from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 
 from pdf_utils import (
@@ -114,7 +115,8 @@ def processar(drive):
 
             # detectar PDF escaneado
             if precisa_ocr(texto):
-                print("⚠ PDF parece escaneado (OCR pode ser necessário)")
+                print("⚠ PDF escaneado detectado — usando OCR")
+                texto = ocr_pdf(caminho)
 
             # traduzir conteúdo
             texto_traduzido = traduzir(texto)
