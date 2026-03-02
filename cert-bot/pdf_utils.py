@@ -135,7 +135,7 @@ def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": "Translate and organize this material certificate page into clear sections and aligned tables."
+                        "text": "Translate and organize this page into structured data. Do NOT use markdown tables. Do NOT use | characters. Return structured plain text only."
                     },
                     {
                         "type": "input_image",
