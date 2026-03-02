@@ -1,9 +1,9 @@
 import os
+import json
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-import json
+from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
@@ -22,7 +22,15 @@ def conectar_drive():
                 json.loads(os.environ["GOOGLE_CREDENTIALS"]),
                 SCOPES
             )
-            creds = flow.run_console()  # 🔥 funciona sem navegador
+
+            auth_url, _ = flow.authorization_url(prompt='consent')
+
+            print("\n👉 Abra este link no navegador:")
+            print(auth_url)
+            code = input("\n👉 Cole o código aqui: ")
+
+            flow.fetch_token(code=code)
+            creds = flow.credentials
 
         with open("token.json", "w") as token:
             token.write(creds.to_json())
