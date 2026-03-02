@@ -179,3 +179,62 @@ def gerar_pdf(texto, nome):
             y = altura - 40
 
     c.save()
+
+def gerar_pdf_traducao_por_pagina(pdf_original, nome_saida):
+
+    paginas = convert_from_path(pdf_original)
+
+    largura, altura = A4
+    c = canvas.Canvas(nome_saida, pagesize=A4)
+
+    for i, pagina in enumerate(paginas, start=1):
+
+        # =========================
+        # Página original
+        # =========================
+        buffer = io.BytesIO()
+        pagina.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        img = ImageReader(buffer)
+        c.drawImage(img, 0, 0, width=largura, height=altura)
+        c.showPage()
+
+        # =========================
+        # OCR + tradução da página
+        # =========================
+        buffer = io.BytesIO()
+        pagina.save(buffer, format="PNG")
+        encoded = base64.b64encode(buffer.getvalue()).decode()
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text",
+                     "text": "Translate this material certificate page to English and organize it clearly."},
+                    {"type": "input_image",
+                     "image_url": f"data:image/png;base64,{encoded}"}
+                ]
+            }]
+        )
+
+        traducao = response.output_text
+
+        # =========================
+        # Página de tradução
+        # =========================
+        textobject = c.beginText(40, altura - 40)
+        textobject.setFont("Helvetica", 10)
+
+        c.drawString(40, altura - 25, f"ENGLISH TRANSLATION — PAGE {i}")
+        c.line(40, altura - 30, largura - 40, altura - 30)
+
+        for linha in traducao.split("\n"):
+            textobject.textLine(linha)
+
+        c.drawText(textobject)
+        c.showPage()
+
+    c.save()
