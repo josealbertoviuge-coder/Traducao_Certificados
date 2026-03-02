@@ -159,3 +159,23 @@ def gerar_pdf_sobreposto(pdf_original, nome_saida, traduzir_func):
         c.showPage()
 
     c.save()
+
+# =========================================================
+# GERAR PDF SIMPLES (FALLBACK)
+# =========================================================
+def gerar_pdf(texto, nome):
+
+    largura, altura = A4
+    c = canvas.Canvas(nome, pagesize=A4)
+
+    y = altura - 40
+
+    for linha in texto.split("\n"):
+        c.drawString(40, y, linha)
+        y -= 14
+
+        if y < 40:
+            c.showPage()
+            y = altura - 40
+
+    c.save()
