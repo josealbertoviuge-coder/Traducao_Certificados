@@ -33,9 +33,9 @@ def processar(drive):
 
         texto_traduzido = traduzir(texto)
 
-nome_saida = "EN_" + arquivo['title']
-gerar_pdf(texto_traduzido, nome_saida)
+        nome_saida = "EN_" + arquivo['title']
+        gerar_pdf(texto_traduzido, nome_saida)
 
-enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
+        enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
 
         mover_para_processados(arquivo)
