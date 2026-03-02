@@ -60,18 +60,32 @@ def traduzir(texto):
 
     for parte in partes:
 
-        prompt = f"""
+prompt = f"""
 Translate the following material certificate to English.
 
-STRICT RULES:
+IMPORTANT:
+
+If the document contains tables such as:
+- chemical composition
+- mechanical properties
+- test results
+
+Return them in structured table format like:
+
+Element | %
+C | 0.20
+Mn | 1.50
+
+Yield Strength | 355 MPa
+Tensile Strength | 510 MPa
+
+RULES:
 - preserve technical terminology
-- keep standards (ASTM, DIN, ISO, EN) unchanged
-- keep units exactly (MPa, mm, %, °C)
-- keep chemical symbols unchanged (C, Mn, Si, Cr, Ni…)
-- DO NOT translate steel grades or material codes
-- keep numeric formatting
-- keep table structure and line breaks
-- output only the translated text
+- keep standards (ASTM, DIN, ISO)
+- keep units exactly
+- keep chemical symbols unchanged
+- do not translate steel grades
+- maintain numeric precision
 
 TEXT:
 {parte}
