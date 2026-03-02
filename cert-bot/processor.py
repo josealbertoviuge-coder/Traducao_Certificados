@@ -12,9 +12,9 @@ def baixar_arquivo(file):
     file.GetContentFile(file['title'])
     return file['title']
 
-def enviar_traduzido(drive, caminho):
-    f = drive.CreateFile({'parents': [{'id': ID_TRADUZIDOS}]})
-    f.SetContentFile(caminho)
+def enviar_traduzido(drive, pasta_id, arquivo):
+    f = drive.CreateFile({'parents': [{'id': pasta_id}]})
+    f.SetContentFile(arquivo)
     f.Upload()
 
 def mover_para_processados(file):
