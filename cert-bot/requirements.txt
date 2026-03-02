@@ -2,3 +2,4 @@ pydrive2
 pymupdf
 reportlab
 openai
+oauth2client
