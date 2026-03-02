@@ -110,11 +110,14 @@ def gerar_pdf_layout(blocos, texto_traduzido, nome):
 
     linhas = texto_traduzido.split("\n")
 
-    for bloco, linha in zip(blocos, linhas):
-        x = bloco["x"]
-        y = 800 - bloco["y"]
+    altura_pagina = 800
 
-        c.drawString(x, y, linha)
+    for bloco, linha in zip(blocos, linhas):
+        x = max(40, bloco["x"])
+        y = altura_pagina - bloco["y"]
+
+        if 40 < y < altura_pagina - 40:
+            c.drawString(x, y, linha)
 
     c.save()
 
