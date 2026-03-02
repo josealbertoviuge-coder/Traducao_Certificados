@@ -87,16 +87,21 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
 # =========================================================
 def gerar_pdf(texto, nome):
 
-    c = canvas.Canvas(nome)
-    y = 800
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+
+    largura, altura = A4
+    c = canvas.Canvas(nome, pagesize=A4)
+
+    y = altura - 40
 
     for linha in texto.split("\n"):
         c.drawString(40, y, linha)
         y -= 15
 
-        if y < 40:  # nova página automática
+        if y < 40:
             c.showPage()
-            y = 800
+            y = altura - 40
 
     c.save()
 
