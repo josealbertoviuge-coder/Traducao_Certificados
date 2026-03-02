@@ -106,17 +106,23 @@ def gerar_pdf(texto, nome):
 # =========================================================
 def gerar_pdf_layout(blocos, texto_traduzido, nome):
 
-    c = canvas.Canvas(nome)
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+
+    largura, altura = A4
+    c = canvas.Canvas(nome, pagesize=A4)
 
     linhas = texto_traduzido.split("\n")
 
-    altura_pagina = 800
-
     for bloco, linha in zip(blocos, linhas):
-        x = max(40, bloco["x"])
-        y = altura_pagina - bloco["y"]
 
-        if 40 < y < altura_pagina - 40:
+        x = bloco["x"]
+
+        # converter coordenada (origem topo → origem base)
+        y = altura - bloco["y"]
+
+        # garantir que o texto fique dentro da página
+        if 20 < y < altura - 20:
             c.drawString(x, y, linha)
 
     c.save()
