@@ -2,7 +2,9 @@ import fitz  # PyMuPDF
 import pdfplumber
 from reportlab.pdfgen import canvas
 from openai import OpenAI
+from pdf2image import convert_from_path
 import base64
+import io
 
 
 # =========================================================
@@ -121,23 +123,32 @@ client = OpenAI()
 
 def ocr_pdf(pdf_path):
 
-    with open(pdf_path, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
+    imagens = convert_from_path(pdf_path)
 
-    data_url = f"data:application/pdf;base64,{encoded}"
+    texto_final = ""
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=[{
-            "role": "user",
-            "content": [
-                {"type": "input_text", "text": "Extract all text from this document."},
-                {
-                    "type": "input_image",
-                    "image_url": data_url
-                }
-            ]
-        }]
-    )
+    for img in imagens:
 
-    return response.output_text
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        encoded = base64.b64encode(buffer.getvalue()).decode()
+
+        data_url = f"data:image/png;base64,{encoded}"
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[{
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": "Extract all text from this document."},
+                    {
+                        "type": "input_image",
+                        "image_url": data_url
+                    }
+                ]
+            }]
+        )
+
+        texto_final += response.output_text + "\n"
+
+    return texto_final
