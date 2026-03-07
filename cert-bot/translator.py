@@ -20,8 +20,10 @@ GLOSSARIO = {
 # APLICAR GLOSSÁRIO APÓS TRADUÇÃO
 # =====================================================
 def aplicar_glossario(texto):
+
     for pt, en in GLOSSARIO.items():
         texto = texto.replace(pt, en)
+
     return texto
 
 
@@ -29,10 +31,12 @@ def aplicar_glossario(texto):
 # DIVIDIR TEXTOS MUITO GRANDES
 # =====================================================
 def dividir_texto(texto, tamanho=3500):
+
     partes = []
     atual = ""
 
     for linha in texto.split("\n"):
+
         if len(atual) + len(linha) < tamanho:
             atual += linha + "\n"
         else:
@@ -50,15 +54,16 @@ def dividir_texto(texto, tamanho=3500):
 # =====================================================
 def traduzir(texto):
 
-    if not texto.strip():
+    if not texto or not texto.strip():
         return ""
 
     partes = dividir_texto(texto)
+
     traducao_final = ""
 
     for parte in partes:
 
-       prompt = f"""
+        prompt = f"""
 Translate the following material certificate to English.
 
 IMPORTANT RULES:
@@ -79,6 +84,7 @@ IMPORTANT RULES:
 TEXT:
 {parte}
 """
+
         resposta = client.responses.create(
             model="gpt-4.1-mini",
             input=prompt
