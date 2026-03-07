@@ -14,77 +14,36 @@ def pdf_para_docx(pdf_path, docx_path):
 
 
 # =========================
-# COPIAR PARÁGRAFOS
-# =========================
-def copiar_paragrafos(origem, destino):
-
-    for p in origem.paragraphs:
-        destino.add_paragraph(p.text)
-
-
-# =========================
-# COPIAR TABELAS
-# =========================
-def copiar_tabelas(origem, destino):
-
-    for table in origem.tables:
-
-        nova = destino.add_table(
-            rows=len(table.rows),
-            cols=len(table.columns)
-        )
-
-        for i, row in enumerate(table.rows):
-            for j, cell in enumerate(row.cells):
-                nova.rows[i].cells[j].text = cell.text
-
-
-# =========================
-# TRADUZIR DOCX
+# TRADUZIR DOCX (IN PLACE)
 # =========================
 def traduzir_docx(docx_entrada, docx_saida):
 
-    original = Document(docx_entrada)
+    doc = Document(docx_entrada)
 
-    novo = Document()
+    # traduz parágrafos
+    for p in doc.paragraphs:
 
-    # -------------------------
-    # PÁGINAS ORIGINAIS
-    # -------------------------
-    copiar_paragrafos(original, novo)
-    copiar_tabelas(original, novo)
+        texto = p.text.strip()
 
-    # quebra de página
-    novo.add_page_break()
+        if texto:
+            try:
+                p.text = traduzir(texto)
+            except:
+                pass
 
-    novo.add_paragraph("ENGLISH TRANSLATION")
-    novo.add_page_break()
+    # traduz tabelas
+    for table in doc.tables:
 
-    # -------------------------
-    # PÁGINAS TRADUZIDAS
-    # -------------------------
-    for p in original.paragraphs:
+        for row in table.rows:
 
-        if p.text.strip():
-            texto = traduzir(p.text)
-        else:
-            texto = ""
+            for cell in row.cells:
 
-        novo.add_paragraph(texto)
+                texto = cell.text.strip()
 
-    for table in original.tables:
+                if texto:
+                    try:
+                        cell.text = traduzir(texto)
+                    except:
+                        pass
 
-        nova = novo.add_table(
-            rows=len(table.rows),
-            cols=len(table.columns)
-        )
-
-        for i, row in enumerate(table.rows):
-            for j, cell in enumerate(row.cells):
-
-                if cell.text.strip():
-                    nova.rows[i].cells[j].text = traduzir(cell.text)
-                else:
-                    nova.rows[i].cells[j].text = ""
-
-    novo.save(docx_saida)
+    doc.save(docx_saida)
