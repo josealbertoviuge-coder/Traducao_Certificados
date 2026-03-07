@@ -1,11 +1,17 @@
+import os
+
 from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 
 from pdf_utils import (
     extrair_texto,
     precisa_ocr,
-    limpar_assinatura,
-    ocr_pdf,
-    gerar_pdf_traducao_por_pagina
+    limpar_assinatura
+)
+
+from docx_utils import (
+    pdf_para_docx,
+    traduzir_docx,
+    docx_para_pdf
 )
 
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
@@ -112,14 +118,54 @@ def processar(drive):
                 print("⚠ PDF escaneado detectado — usando OCR")
                 ocr_pdf(caminho)  # apenas valida leitura (opcional)
 
-            # gerar tradução por página (original + tradução)
-            print("✔ Gerando tradução por página (padrão profissional)")
-            nome_saida = "EN_" + arquivo['name']
+print("✔ Convertendo PDF para DOCX")
 
-            gerar_pdf_traducao_por_pagina(
-                caminho,
-                nome_saida
-            )
+docx_original = arquivo['name'].replace(".pdf", ".docx")
+
+pdf_para_docx(
+    caminho,
+    docx_original
+)
+
+print("✔ Traduzindo DOCX")
+
+docx_traduzido = "EN_" + docx_original
+
+traduzir_docx(
+    docx_original,
+    docx_traduzido
+)
+
+print("✔ Convertendo PDF para DOCX")
+
+docx_original = arquivo['name'].replace(".pdf", ".docx")
+
+pdf_para_docx(
+    caminho,
+    docx_original
+)
+
+print("✔ Traduzindo DOCX")
+
+docx_traduzido = "EN_" + docx_original
+
+traduzir_docx(
+    docx_original,
+    docx_traduzido
+)
+
+print("✔ Convertendo DOCX traduzido para PDF")
+
+docx_para_pdf(docx_traduzido)
+
+nome_pdf_convertido = docx_traduzido.replace(".docx", ".pdf")
+
+nome_saida = "EN_" + arquivo['name']
+
+os.rename(
+    nome_pdf_convertido,
+    nome_saida
+)
 
             # enviar traduzido
             enviar_traduzido(drive, ID_TRADUZIDOS, nome_saida)
