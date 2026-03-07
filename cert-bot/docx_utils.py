@@ -1,7 +1,6 @@
 from pdf2docx import Converter
 from docx import Document
 from translator import traduzir
-import subprocess
 
 
 # =========================
@@ -15,36 +14,77 @@ def pdf_para_docx(pdf_path, docx_path):
 
 
 # =========================
+# COPIAR PARÁGRAFOS
+# =========================
+def copiar_paragrafos(origem, destino):
+
+    for p in origem.paragraphs:
+        destino.add_paragraph(p.text)
+
+
+# =========================
+# COPIAR TABELAS
+# =========================
+def copiar_tabelas(origem, destino):
+
+    for table in origem.tables:
+
+        nova = destino.add_table(
+            rows=len(table.rows),
+            cols=len(table.columns)
+        )
+
+        for i, row in enumerate(table.rows):
+            for j, cell in enumerate(row.cells):
+                nova.rows[i].cells[j].text = cell.text
+
+
+# =========================
 # TRADUZIR DOCX
 # =========================
 def traduzir_docx(docx_entrada, docx_saida):
 
-    doc = Document(docx_entrada)
+    original = Document(docx_entrada)
 
-    # traduz parágrafos
-    for p in doc.paragraphs:
+    novo = Document()
+
+    # -------------------------
+    # PÁGINAS ORIGINAIS
+    # -------------------------
+    copiar_paragrafos(original, novo)
+    copiar_tabelas(original, novo)
+
+    # quebra de página
+    novo.add_page_break()
+
+    novo.add_paragraph("ENGLISH TRANSLATION")
+    novo.add_page_break()
+
+    # -------------------------
+    # PÁGINAS TRADUZIDAS
+    # -------------------------
+    for p in original.paragraphs:
+
         if p.text.strip():
-            p.text = traduzir(p.text)
+            texto = traduzir(p.text)
+        else:
+            texto = ""
 
-    # traduz tabelas
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
+        novo.add_paragraph(texto)
+
+    for table in original.tables:
+
+        nova = novo.add_table(
+            rows=len(table.rows),
+            cols=len(table.columns)
+        )
+
+        for i, row in enumerate(table.rows):
+            for j, cell in enumerate(row.cells):
+
                 if cell.text.strip():
-                    cell.text = traduzir(cell.text)
+                    nova.rows[i].cells[j].text = traduzir(cell.text)
+                else:
+                    nova.rows[i].cells[j].text = ""
 
-    doc.save(docx_saida)
-
-
-# =========================
-# DOCX → PDF (LINUX/RENDER)
-# =========================
-def docx_para_pdf(docx_path):
-
-    subprocess.run([
-        "libreoffice",
-        "--headless",
-        "--convert-to",
-        "pdf",
-        docx_path
-    ])
+    novo.save(docx_saida)
