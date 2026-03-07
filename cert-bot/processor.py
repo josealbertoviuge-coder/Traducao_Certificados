@@ -160,16 +160,7 @@ def processar(drive):
             # =========================
             print("✔ Convertendo DOCX traduzido para PDF")
 
-            docx_para_pdf(docx_traduzido)
-
-            nome_pdf_convertido = docx_traduzido.replace(".docx", ".pdf")
-
-            nome_saida = "EN_" + arquivo["name"]
-
-            os.rename(
-                nome_pdf_convertido,
-                nome_saida
-            )
+            nome_saida = docx_traduzido
 
             # =========================
             # ENVIAR PDF TRADUZIDO
