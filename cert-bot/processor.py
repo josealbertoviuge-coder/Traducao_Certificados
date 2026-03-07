@@ -12,8 +12,7 @@ from pdf_utils import (
 
 from docx_utils import (
     pdf_para_docx,
-    traduzir_docx,
-    docx_para_pdf
+    traduzir_docx
 )
 
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
@@ -23,6 +22,7 @@ from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 # LISTAR ARQUIVOS NA PASTA
 # =========================
 def listar_arquivos(drive):
+
     results = drive.files().list(
         q=f"'{ID_ENTRADA}' in parents and trashed=false",
         fields="files(id, name)",
@@ -31,6 +31,7 @@ def listar_arquivos(drive):
     ).execute()
 
     print("RETORNO DRIVE:", results)
+
     return results.get("files", [])
 
 
@@ -42,9 +43,11 @@ def baixar_arquivo(drive, file_id, nome):
     request = drive.files().get_media(fileId=file_id)
 
     fh = io.FileIO(nome, "wb")
+
     downloader = MediaIoBaseDownload(fh, request)
 
     done = False
+
     while not done:
         _, done = downloader.next_chunk()
 
@@ -156,14 +159,14 @@ def processar(drive):
             )
 
             # =========================
-            # DOCX → PDF
+            # USAR DOCX TRADUZIDO
             # =========================
-            print("✔ Convertendo DOCX traduzido para PDF")
+            print("✔ Usando DOCX traduzido")
 
             nome_saida = docx_traduzido
 
             # =========================
-            # ENVIAR PDF TRADUZIDO
+            # ENVIAR DOCX TRADUZIDO
             # =========================
             enviar_traduzido(
                 drive,
@@ -188,4 +191,5 @@ def processar(drive):
 
         except Exception as e:
 
+            print(f"Erro ao processar {arquivo['name']}: {e}")
             print(f"Erro ao processar {arquivo['name']}: {e}")
