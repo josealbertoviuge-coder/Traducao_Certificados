@@ -1,5 +1,5 @@
 import fitz
-from translator import traduzir
+from translator import traduzir_pagina
 
 
 def traduzir_pdf_overlay(pdf_entrada, pdf_saida):
@@ -20,13 +20,13 @@ def traduzir_pdf_overlay(pdf_entrada, pdf_saida):
                 continue
 
             try:
-                traducao = traduzir(texto)
+                traducao = traduzir_pagina(texto)
             except:
                 traducao = texto
 
-            # remover texto original
             rect = fitz.Rect(x0, y0, x1, y1)
 
+            # apagar texto original
             page.draw_rect(rect, color=(1,1,1), fill=(1,1,1))
 
             # escrever tradução
