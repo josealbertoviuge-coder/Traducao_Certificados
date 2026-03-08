@@ -220,3 +220,17 @@ def _criar_tabela(dados):
     ]))
 
     return tabela
+
+def extrair_paginas(pdf):
+
+    doc = fitz.open(pdf)
+
+    paginas = []
+
+    for page in doc:
+
+        texto = page.get_text()
+
+        paginas.append(texto)
+
+    return paginas
