@@ -9,5 +9,6 @@ opencv-python-headless
 Pillow
 pdf2image
 pytesseract
+tesseract
 pdf2docx
 python-docx
