@@ -7,12 +7,14 @@ from config import ID_ENTRADA, ID_TRADUZIDOS, ID_PROCESSADOS
 from pdf_utils import (
     extrair_texto,
     precisa_ocr,
-    limpar_assinatura
+    limpar_assinatura,
+    ocr_pdf
 )
 
 from docx_utils import (
     pdf_para_docx,
-    traduzir_docx
+    traduzir_docx,
+    criar_docx_ocr
 )
 
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
@@ -127,53 +129,62 @@ def processar(drive):
             limpar_assinatura(caminho, caminho)
 
             # =========================
-            # DETECTAR SE É ESCANEADO
+            # DETECTAR TEXTO
             # =========================
             texto = extrair_texto(caminho)
 
+            # =================================================
+            # PIPELINE PARA PDF ESCANEADO
+            # =================================================
             if precisa_ocr(texto):
-                print("⚠ PDF escaneado detectado — aplicando OCR")
 
-                from pdf_utils import ocr_pdf
+                print("⚠ PDF escaneado detectado — usando OCR")
 
-                texto = ocr_pdf(caminho)
+                texto_ocr = ocr_pdf(caminho)
 
-                if not texto.strip():
-                    raise Exception("OCR não conseguiu extrair texto do PDF")
+                if not texto_ocr.strip():
+                    raise Exception("OCR não conseguiu extrair texto")
+
+                docx_traduzido = "EN_" + arquivo["name"].replace(".pdf", ".docx")
+
+                print("✔ Criando DOCX a partir do OCR")
+
+                criar_docx_ocr(
+                    texto_ocr,
+                    docx_traduzido
+                )
+
+                nome_saida = docx_traduzido
+
+            # =================================================
+            # PIPELINE PARA PDF DIGITAL
+            # =================================================
+            else:
+
+                print("✔ PDF digital detectado")
+
+                print("✔ Convertendo PDF para DOCX")
+
+                docx_original = arquivo["name"].replace(".pdf", ".docx")
+
+                pdf_para_docx(
+                    caminho,
+                    docx_original
+                )
+
+                print("✔ Traduzindo DOCX")
+
+                docx_traduzido = "EN_" + docx_original
+
+                traduzir_docx(
+                    docx_original,
+                    docx_traduzido
+                )
+
+                nome_saida = docx_traduzido
 
             # =========================
-            # PDF → DOCX
-            # =========================
-            print("✔ Convertendo PDF para DOCX")
-
-            docx_original = arquivo["name"].replace(".pdf", ".docx")
-
-            pdf_para_docx(
-                caminho,
-                docx_original
-            )
-
-            # =========================
-            # TRADUZIR DOCX
-            # =========================
-            print("✔ Traduzindo DOCX")
-
-            docx_traduzido = "EN_" + docx_original
-
-            traduzir_docx(
-                docx_original,
-                docx_traduzido
-            )
-
-            # =========================
-            # USAR DOCX TRADUZIDO
-            # =========================
-            print("✔ Usando DOCX traduzido")
-
-            nome_saida = docx_traduzido
-
-            # =========================
-            # ENVIAR DOCX TRADUZIDO
+            # ENVIAR RESULTADO
             # =========================
             enviar_traduzido(
                 drive,
@@ -198,5 +209,4 @@ def processar(drive):
 
         except Exception as e:
 
-            print(f"Erro ao processar {arquivo['name']}: {e}")
             print(f"Erro ao processar {arquivo['name']}: {e}")
