@@ -16,6 +16,8 @@ from openai import OpenAI
 import base64
 import io
 import os
+import pytesseract
+import tempfile
 
 client = OpenAI()
 
@@ -61,29 +63,20 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
 # OCR VIA OPENAI (para PDFs escaneados)
 # =========================================================
 def ocr_pdf(pdf_path):
-    imagens = convert_from_path(pdf_path, dpi=150)
-    texto = ""
 
-    for img in imagens:
-        buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
-        encoded = base64.b64encode(buffer.getvalue()).decode()
+    imagens = convert_from_path(pdf_path, dpi=200)
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=[{
-                "role": "user",
-                "content": [
-                    {"type": "input_text", "text": "Extract all text from this document."},
-                    {"type": "input_image",
-                     "image_url": f"data:image/png;base64,{encoded}"}
-                ]
-            }]
-        )
+    texto_total = ""
 
-        texto += response.output_text + "\n"
+    for i, img in enumerate(imagens, start=1):
 
-    return texto
+        print(f"OCR página {i}")
+
+        texto = pytesseract.image_to_string(img, lang="eng")
+
+        texto_total += texto + "\n"
+
+    return texto_total
 
 
 # =========================================================
