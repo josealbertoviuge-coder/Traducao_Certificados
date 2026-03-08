@@ -61,17 +61,19 @@ def criar_docx_ocr(texto, saida):
 
     doc.add_heading("ENGLISH TRANSLATION", level=1)
 
-    for linha in texto.split("\n"):
+    blocos = texto.split("\n\n")
 
-        linha = linha.strip()
+    for bloco in blocos:
 
-        if not linha:
+        bloco = bloco.strip()
+
+        if not bloco:
             continue
 
         try:
-            traducao = traduzir(linha)
+            traducao = traduzir(bloco)
         except:
-            traducao = linha
+            traducao = bloco
 
         doc.add_paragraph(traducao)
 
