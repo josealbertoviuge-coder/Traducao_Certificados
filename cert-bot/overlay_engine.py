@@ -27,13 +27,18 @@ def traduzir_pdf_overlay(pdf_entrada, pdf_saida):
             rect = fitz.Rect(x0, y0, x1, y1)
 
             # apagar texto original
-            page.draw_rect(rect, color=(1,1,1), fill=(1,1,1))
+            page.draw_rect(
+                rect,
+                color=(1, 1, 1),
+                fill=(1, 1, 1)
+            )
 
             # escrever tradução
-            page.insert_textbox(
-                rect,
+            page.insert_text(
+                (x0, y0 + 8),
                 traducao,
-                fontsize=8
+                fontsize=8,
+                color=(0, 0, 0)
             )
 
     doc.save(pdf_saida)
