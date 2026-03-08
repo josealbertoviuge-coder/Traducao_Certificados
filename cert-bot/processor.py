@@ -132,7 +132,14 @@ def processar(drive):
             texto = extrair_texto(caminho)
 
             if precisa_ocr(texto):
-                print("⚠ PDF escaneado detectado (DOCX pode ter baixa qualidade)")
+                print("⚠ PDF escaneado detectado — aplicando OCR")
+
+                from pdf_utils import ocr_pdf
+
+                texto = ocr_pdf(caminho)
+
+                if not texto.strip():
+                    raise Exception("OCR não conseguiu extrair texto do PDF")
 
             # =========================
             # PDF → DOCX
