@@ -72,9 +72,29 @@ def ocr_pdf(pdf_path):
 
         print(f"OCR página {i}")
 
-        texto = pytesseract.image_to_string(img, lang="eng")
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
 
-        texto_total += texto + "\n"
+        encoded = base64.b64encode(buffer.getvalue()).decode()
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": "Extract all text exactly as written in this document."
+                    },
+                    {
+                        "type": "input_image",
+                        "image_url": f"data:image/png;base64,{encoded}"
+                    }
+                ]
+            }]
+        )
+
+        texto_total += response.output_text + "\n"
 
     return texto_total
 
