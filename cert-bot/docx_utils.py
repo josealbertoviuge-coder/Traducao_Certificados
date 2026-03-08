@@ -1,6 +1,6 @@
 from pdf2docx import Converter
 from docx import Document
-from translator import traduzir
+from translator import traduzir_pagina
 
 
 # =========================
@@ -14,46 +14,35 @@ def pdf_para_docx(pdf_path, docx_path):
 
 
 # =========================
-# TRADUZIR DOCX (IN PLACE)
+# CRIAR DOCX POR PÁGINAS
 # =========================
-def traduzir_docx(docx_entrada, docx_saida):
+def criar_docx_paginas(paginas, saida):
 
-    doc = Document(docx_entrada)
+    doc = Document()
 
-    # traduz parágrafos
-    for p in doc.paragraphs:
+    for i, pagina in enumerate(paginas, start=1):
 
-        texto = p.text.strip()
+        doc.add_heading(f"PAGE {i} - ORIGINAL", level=1)
 
-        if texto:
-            try:
-                p.text = traduzir(texto)
-            except:
-                pass
+        for linha in pagina.split("\n"):
+            doc.add_paragraph(linha)
 
-    # traduz tabelas
-    for table in doc.tables:
+        doc.add_page_break()
 
-        for row in table.rows:
+        doc.add_heading(f"PAGE {i} - ENGLISH", level=1)
 
-            for cell in row.cells:
+        traducao = traduzir_pagina(pagina)
 
-                texto = cell.text.strip()
+        for linha in traducao.split("\n"):
+            doc.add_paragraph(linha)
 
-                if texto:
-                    try:
-                        cell.text = traduzir(texto)
-                    except:
-                        pass
+        doc.add_page_break()
 
-    doc.save(docx_saida)
-
-from docx import Document
-from translator import traduzir
+    doc.save(saida)
 
 
 # =========================
-# CRIAR DOCX A PARTIR DO OCR
+# DOCX A PARTIR DO OCR
 # =========================
 def criar_docx_ocr(texto, saida):
 
@@ -61,20 +50,13 @@ def criar_docx_ocr(texto, saida):
 
     doc.add_heading("ENGLISH TRANSLATION", level=1)
 
-    blocos = texto.split("\n\n")
+    for linha in texto.split("\n"):
 
-    for bloco in blocos:
+        linha = linha.strip()
 
-        bloco = bloco.strip()
-
-        if not bloco:
+        if not linha:
             continue
 
-        try:
-            traducao = traduzir(bloco)
-        except:
-            traducao = bloco
-
-        doc.add_paragraph(traducao)
+        doc.add_paragraph(linha)
 
     doc.save(saida)
