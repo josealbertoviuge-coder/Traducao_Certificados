@@ -47,3 +47,32 @@ def traduzir_docx(docx_entrada, docx_saida):
                         pass
 
     doc.save(docx_saida)
+
+from docx import Document
+from translator import traduzir
+
+
+# =========================
+# CRIAR DOCX A PARTIR DO OCR
+# =========================
+def criar_docx_ocr(texto, saida):
+
+    doc = Document()
+
+    doc.add_heading("ENGLISH TRANSLATION", level=1)
+
+    for linha in texto.split("\n"):
+
+        linha = linha.strip()
+
+        if not linha:
+            continue
+
+        try:
+            traducao = traduzir(linha)
+        except:
+            traducao = linha
+
+        doc.add_paragraph(traducao)
+
+    doc.save(saida)
