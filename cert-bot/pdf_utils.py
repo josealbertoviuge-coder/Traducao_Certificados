@@ -61,7 +61,7 @@ def limpar_assinatura(pdf_entrada, pdf_saida=None):
 # OCR VIA OPENAI (para PDFs escaneados)
 # =========================================================
 def ocr_pdf(pdf_path):
-    imagens = convert_from_path(pdf_path)
+    imagens = convert_from_path(pdf_path, dpi=150)
     texto = ""
 
     for img in imagens:
