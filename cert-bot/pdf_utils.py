@@ -26,10 +26,21 @@ client = OpenAI()
 # =========================================================
 def extrair_texto(pdf):
     doc = fitz.open(pdf)
-    texto = ""
+    texto_total = ""
+
     for page in doc:
-        texto += page.get_text()
-    return texto.strip()
+
+        # 1. tentativa simples
+        texto = page.get_text("text")
+
+        # 2. fallback: usar words (muito mais confiável)
+        if not texto.strip():
+            words = page.get_text("words")
+            texto = " ".join([w[4] for w in words if w[4].strip()])
+
+        texto_total += texto + "\n"
+
+    return texto_total.strip()
 
 
 # =========================================================
@@ -223,14 +234,48 @@ def _criar_tabela(dados):
 
 def extrair_paginas(pdf):
 
-    doc = fitz.open(pdf)
+    import fitz
 
+    doc = fitz.open(pdf)
     paginas = []
 
-    for page in doc:
+    for i, page in enumerate(doc, start=1):
 
-        texto = page.get_text()
+        # =========================
+        # 1. tentativa padrão
+        # =========================
+        texto = page.get_text("text")
 
-        paginas.append(texto)
+        # =========================
+        # 2. fallback com words
+        # =========================
+        if not texto.strip():
+            words = page.get_text("words")
+
+            # words = (x0, y0, x1, y1, "texto", block_no, line_no, word_no)
+            palavras = [w[4] for w in words if w[4].strip()]
+
+            texto = " ".join(palavras)
+
+        # =========================
+        # 3. fallback extremo (blocks)
+        # =========================
+        if not texto.strip():
+            blocks = page.get_text("blocks")
+
+            blocos_texto = []
+            for b in blocks:
+                if isinstance(b[4], str) and b[4].strip():
+                    blocos_texto.append(b[4].strip())
+
+            texto = "\n".join(blocos_texto)
+
+        # =========================
+        # 4. debug opcional
+        # =========================
+        if not texto.strip():
+            print(f"[AVISO] Página {i} sem texto extraível (possível OCR necessário)")
+
+        paginas.append(texto.strip())
 
     return paginas
